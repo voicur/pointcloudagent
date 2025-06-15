@@ -70,12 +70,16 @@ def call_tool(request_json: dict) -> dict:
     server_proc.stdin.write(json.dumps(request_json) + "\n")
     server_proc.stdin.flush()
 
-    # read lines until one is valid JSON
+    # read lines until one parses as JSON
     for line in server_proc.stdout:
         line = line.strip()
-        if line.startswith("{") and line.endswith("}"):
-            return json.loads(line)            
-        # everything else (debug prints, etc.) is ignored
+        if not line:
+            continue
+        try:
+            return json.loads(line)
+        except json.JSONDecodeError:
+            # everything else (debug prints, etc.) is ignored
+            continue
     raise RuntimeError("MCP server connection closed unexpectedly")
 
 if __name__ == "__main__":
