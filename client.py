@@ -93,7 +93,7 @@ if __name__ == "__main__":
             tool_req = extract_json(raw)
             if tool_req:
                 result = call_tool(tool_req)
-                print(f"[Tool result] {result}")
+                print(f"[Tool result] {json.dumps(result)}")
             else:
                 print(raw)                    
     except KeyboardInterrupt:
