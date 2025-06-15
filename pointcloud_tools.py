@@ -1,5 +1,7 @@
-import open3d as o3d, sys
+import open3d as o3d
 import os
+import sys
+
 
 def count_points(path: str) -> int:
     pc = o3d.io.read_point_cloud(path)
@@ -21,4 +23,3 @@ def find_ply_files(path: str = ".") -> list[str]:
                 matches.append(os.path.join(root, name))
     print(f"[debug] searched {path}  →  {len(matches)} matches", file=sys.stderr, flush=True)
     return matches
-

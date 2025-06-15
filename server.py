@@ -21,7 +21,7 @@ def list_files(path: str = ".") -> list[str]:
 
 @mcp.tool
 def find_ply_files(path: str = ".") -> list[str]:
-    """Recursively list ``.ply`` files under ``path``."""
+    """Recursively find .ply files under the given path."""
     return pct.find_ply_files(path)
 
 if __name__ == "__main__":
