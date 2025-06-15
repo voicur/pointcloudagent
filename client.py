@@ -35,7 +35,8 @@ def ask_llm(message: str) -> str:
     resp = llm.create_completion(
         prompt=f"{SYSTEM_PROMPT}\n\nUser: {message}\nAssistant:",
         temperature=0.0,
-        max_tokens=128,
+        max_tokens=256,
+        stop=["\nUser:"]
     )
     return resp["choices"][0]["text"].strip()
 

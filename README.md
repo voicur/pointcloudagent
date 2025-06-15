@@ -11,7 +11,9 @@ python client.py
 ```
 
 The client allocates up to 256 tokens for each LLM reply so that tool
-requests are not truncated.
+requests are not truncated.  Generation stops whenever the model begins a
+new `User:` line, allowing you to continue issuing commands without long
+delays.
 
 The assistant may choose to call tools automatically based on your questions. Tool requests are printed in the terminal along with their results.
 
