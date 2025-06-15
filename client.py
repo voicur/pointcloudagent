@@ -34,7 +34,8 @@ answer as a normal chat assistant."""
 def ask_llm(message: str) -> str:
     resp = llm.create_completion(
         prompt=f"{SYSTEM_PROMPT}\n\nUser: {message}\nAssistant:",
-        temperature=0.0
+        temperature=0.0,
+        max_tokens=256,
     )
     return resp["choices"][0]["text"].strip()
 
