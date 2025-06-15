@@ -13,10 +13,23 @@ server_proc = subprocess.Popen(
 
 llm = Llama(model_path=MODEL_PATH, n_ctx=4096, verbose=False, log_level="error")
 
-SYSTEM_PROMPT = """You are an assistant that can call MCP tools …
-…
-Otherwise, just answer as a normal chat assistant.
-"""
+SYSTEM_PROMPT = """You are an assistant that can call MCP tools. To invoke a
+tool you must emit a single line of JSON like:
+    {"tool": "tool_name", "args": {"arg": "value"}}
+Wait for the tool result before continuing your reply.
+
+Available tools:
+  • count_points(path: str) -> int
+        Return the number of points in a point cloud file.
+  • get_bounding_box(path: str) -> dict
+        Return the axis-aligned bounding box of a point cloud file.
+  • list_files(path: str = ".") -> list[str]
+        List files and folders in the directory.
+  • find_ply_files(path: str = ".") -> list[str]
+        Recursively search for files ending with ".ply".
+
+If the user request requires file information, call a tool. Otherwise, just
+answer as a normal chat assistant."""
 
 def ask_llm(message: str) -> str:
     resp = llm.create_completion(

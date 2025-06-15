@@ -19,6 +19,11 @@ def list_files(path: str = ".") -> list[str]:
     """List files and folders in the directory."""
     return os.listdir(path)
 
+@mcp.tool
+def find_ply_files(path: str = ".") -> list[str]:
+    """Recursively list ``.ply`` files under ``path``."""
+    return pct.find_ply_files(path)
+
 if __name__ == "__main__":
     mcp.run()        # FastMCP prints exactly one JSON line per call
 
