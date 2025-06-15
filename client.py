@@ -26,11 +26,29 @@ def ask_llm(message: str) -> str:
     return resp["choices"][0]["text"].strip()
 
 def extract_json(txt: str):
-    for m in re.finditer(r"\{.*?\}", txt, flags=re.DOTALL):
+    """Return first JSON object found in the text or ``None`` if parsing fails."""
+
+    # Look for fenced blocks like ```json ... ```
+    fence = re.search(r"```\s*json\s*(\{.*?\})\s*```", txt, flags=re.DOTALL | re.IGNORECASE)
+    if fence:
+        snippet = fence.group(1)
         try:
-            return json.loads(m.group(0))
+            return json.loads(snippet)
+        except json.JSONDecodeError as e:
+            print(f"[error] failed to parse fenced JSON: {e}", file=sys.stderr)
+
+    decoder = json.JSONDecoder()
+    # Scan the text for the first valid JSON object
+    for idx, ch in enumerate(txt):
+        if ch != "{":
+            continue
+        try:
+            obj, _ = decoder.raw_decode(txt[idx:])
+            return obj
         except json.JSONDecodeError:
             continue
+
+    print(f"[error] failed to parse JSON from: {txt!r}", file=sys.stderr)
     return None
 
 def call_tool(request_json: dict) -> dict:
