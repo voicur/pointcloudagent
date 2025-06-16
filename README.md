@@ -16,6 +16,8 @@ new `User:` line, allowing you to continue issuing commands without long
 delays.
 
 The assistant may choose to call tools automatically based on your questions. Tool requests are printed in the terminal along with their results.
+After a tool finishes, the client sends its output back to the model so the
+assistant can complete its response before you enter another command.
 
 ## Finding PLY files
 
