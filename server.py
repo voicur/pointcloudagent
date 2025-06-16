@@ -7,24 +7,26 @@ DEFAULT_PATH = "data/bunny.ply"
 mcp = FastMCP(name="PointCloud Demo")
 
 @mcp.tool
-def count_points(path: str = DEFAULT_PATH) -> int:
+def count_points(path: str = DEFAULT_PATH):
     """Return number of points in the file.
 
-    If ``path`` does not exist, the default ``data/bunny.ply`` is used.
+    Returns ``{"error": "..."}`` if the file does not exist.
     """
-    if os.path.exists(path):
+    try:
         return pct.count_points(path)
-    return pct.count_points(DEFAULT_PATH)
+    except FileNotFoundError as e:
+        return {"error": str(e)}
 
 @mcp.tool
-def get_bounding_box(path: str = DEFAULT_PATH) -> dict:
+def get_bounding_box(path: str = DEFAULT_PATH):
     """Return axis-aligned bounding box.
 
-    If ``path`` does not exist, the default ``data/bunny.ply`` is used.
+    Returns ``{"error": "..."}`` if the file does not exist.
     """
-    if os.path.exists(path):
+    try:
         return pct.get_bounding_box(path)
-    return pct.get_bounding_box(DEFAULT_PATH)
+    except FileNotFoundError as e:
+        return {"error": str(e)}
 
 @mcp.tool
 def list_files(path: str = ".", extension: str | None = None) -> list[str]:
