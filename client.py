@@ -8,6 +8,7 @@ server_proc = subprocess.Popen(
     [shutil.which("python3"), "-u", "server.py"],   #  ←  -u = unbuffered
     stdin=subprocess.PIPE,
     stdout=subprocess.PIPE,
+    stderr=subprocess.PIPE,
     text=True,
 )
 
@@ -76,12 +77,23 @@ def call_tool(request_json: dict) -> dict:
     for line in server_proc.stdout:
         line = line.strip()
         if not line:
+            # If the server exited before producing output, break so we can
+            # check its status below.
+            if server_proc.poll() is not None:
+                break
             continue
         try:
             return json.loads(line)
         except json.JSONDecodeError:
             # everything else (debug prints, etc.) is ignored
             continue
+
+    # No JSON response was received.  If the server has terminated, dump its
+    # stderr so the user can see why before raising an error.
+    if server_proc.poll() is not None and server_proc.stderr:
+        err = server_proc.stderr.read()
+        if err:
+            print(err, file=sys.stderr, end="")
     raise RuntimeError("MCP server connection closed unexpectedly")
 
 if __name__ == "__main__":
