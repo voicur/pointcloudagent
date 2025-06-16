@@ -35,3 +35,24 @@ What PLY files are under the `data` folder?
 ```
 
 The assistant will call `find_ply_files` and respond with the list of matching file paths.
+
+## Simple MCP Example
+
+This repo now includes `c.py` and `s.py`, a minimal client/server pair showing how
+MCP tools are invoked. The server defines a single `greet` tool and uses the
+`fastmcp` package to process JSON requests. The client starts the server, sends a
+request, and prints the resulting JSON response with debug logging enabled.
+
+To run this example you first need to install the `fastmcp` package:
+
+```bash
+pip install fastmcp
+```
+
+Then launch the client:
+
+```bash
+python c.py
+```
+
+The client will start the server and call the `greet` tool once.
