@@ -13,6 +13,7 @@ HEADERS = {
     "Accept": "application/json, text/event-stream"
 }
 
+# Increase max_tokens so the JSON object can fit
 llm = Llama(
     model_path=MODEL_PATH,
     n_ctx=4096,
@@ -22,43 +23,36 @@ llm = Llama(
 )
 
 SYSTEM_PROMPT = """You are a minimal assistant that ONLY calls MCP tools when needed.
-When you call a tool, emit EXACTLY one JSON object on its own line, with no extra text:
+When you call a tool, emit EXACTLY one JSON object on its own line, with no extra text, for example:
 
 {"tool": "tool_name", "args": {"arg": "value"}}
 
-Then stop. Do NOT wrap in fences or markdown.
+Then stop. Do not say anything else. Do NOT wrap in markdown or code fences.
 
 Available tools:
   • count_points(path: str) -> int or {{ "error": str }}
   • get_bounding_box(path: str) -> dict or {{ "error": str }}
   • list_files(path: str = ".", extension: str | None = None) -> list[str]
-      – omit “extension” unless the user explicitly asks for a file type
-  • find_ply_files(path: str = ".") -> list[str]
-  • visualize_pointcloud(path: str) -> dict
-      – opens an Open3D window to visualize the .ply and returns status when closed
+  • find_ply_files(path: str = ".") -> list[str"]
 
-If the user’s request requires one of these tools, call it. Otherwise, answer normally.
+If the user’s request requires file operations, call the appropriate tool. Otherwise, answer normally.
 """
 
-def ask_llm(prompt: str, stop=None, max_tokens=256) -> str:
-    params = {"prompt": prompt, "temperature": 0.0, "max_tokens": max_tokens}
-    if stop is not None:
-        params["stop"] = stop
-    resp = llm.create_completion(**params)
+def ask_llm(prompt: str) -> str:
+    resp = llm.create_completion(
+        prompt=prompt,
+        max_tokens=256,
+        stop=["\n"],            # stop at first newline after JSON
+    )
     return resp["choices"][0]["text"].strip()
 
 def extract_tool_call(text: str):
+    # find a JSON object in the text
     decoder = json.JSONDecoder()
     for m in re.finditer(r"\{", text):
         try:
-            obj, _ = decoder.raw_decode(text[m.start():])
+            obj, end = decoder.raw_decode(text[m.start():])
             if "tool" in obj:
-                # Remove empty or None extensions for list_files
-                if obj["tool"] == "list_files":
-                    args = obj.get("args", {})
-                    if args.get("extension") in (None, "", "null"):
-                        args.pop("extension", None)
-                    obj["args"] = args
                 return obj
         except json.JSONDecodeError:
             continue
@@ -74,8 +68,15 @@ def call_tool(request_json: dict):
             "arguments": request_json.get("args", {})
         }
     }
-    resp = requests.post(SERVER_URL, json=rpc, headers=HEADERS, stream=True)
+    resp = requests.post(
+        SERVER_URL,
+        json=rpc,
+        headers=HEADERS,
+        stream=True
+    )
     resp.raise_for_status()
+
+    # parse SSE frames until we see "result"
     for line in resp.iter_lines(decode_unicode=True):
         if not line or not line.startswith("data:"):
             continue
@@ -94,7 +95,7 @@ if __name__ == "__main__":
         while True:
             user_input = input(">> ").strip()
             history += f"\nUser: {user_input}\nAssistant:"
-            reply = ask_llm(history, stop=["\n"])
+            reply = ask_llm(history)
             print("LLM:", reply)
             history += " " + reply
 
@@ -102,10 +103,14 @@ if __name__ == "__main__":
             if tool_call:
                 result = call_tool(tool_call)
                 print("[Tool result]", result)
+                # feed back the result and get the final answer
                 history += f"\n{json.dumps(result)}\nAssistant:"
-                final = ask_llm(history, stop=["\nUser:"])
+                final = ask_llm(history)
                 print("Assistant:", final)
                 history += " " + final
+            else:
+                # no tool call—just print the LLM’s answer
+                print(reply)
     except KeyboardInterrupt:
         sys.exit(0)
 

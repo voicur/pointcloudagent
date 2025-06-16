@@ -1,0 +1,52 @@
+#!/usr/bin/env python3
+import os
+import pointcloud_tools as pct
+from mcp.server.fastmcp import FastMCP
+
+mcp = FastMCP(
+    "PointCloudDemo",
+    stateless_http=True,
+    host="127.0.0.1",
+    port=8080
+)
+
+DEFAULT_PATH = "data/bunny.ply"
+
+@mcp.tool()
+def count_points(path: str = DEFAULT_PATH) -> int | dict:
+    """Return number of points in the file."""
+    try:
+        return pct.count_points(path)
+    except FileNotFoundError as e:
+        return {"error": str(e)}
+
+@mcp.tool()
+def get_bounding_box(path: str = DEFAULT_PATH) -> dict:
+    """Return axis-aligned bounding box."""
+    try:
+        return pct.get_bounding_box(path)
+    except FileNotFoundError as e:
+        return {"error": str(e)}
+
+@mcp.tool()
+def list_files(path: str = ".", extension: str | None = None) -> list[str]:
+    """List files in the directory, optionally filtering by extension."""
+    entries = os.listdir(path)
+    if extension:
+        ext = extension.lstrip(".").lower()
+        entries = [
+            os.path.join(path, e)
+            for e in entries
+            if e.lower().endswith(f".{ext}")
+        ]
+    return entries
+
+@mcp.tool()
+def find_ply_files(path: str = ".") -> list[str]:
+    """Recursively find .ply files under the given path."""
+    return pct.find_ply_files(path)
+
+if __name__ == "__main__":
+    # Serve over SSE/HTTP with one-shot JSON responses
+    mcp.run(transport="streamable-http")
+
