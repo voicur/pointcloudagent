@@ -19,6 +19,13 @@ The assistant may choose to call tools automatically based on your questions. To
 After a tool finishes, the client sends its output back to the model so the
 assistant can complete its response before you enter another command.
 
+## Troubleshooting
+
+If the server process terminates unexpectedly (for example because a Python
+dependency like `open3d` is missing), the client prints the server's stderr
+output before raising an error. This output often contains the exact import
+failure or traceback so you can install the missing package and try again.
+
 ## Finding PLY files
 
 Use the `find_ply_files` tool to search for `.ply` files recursively. For example you can ask:
