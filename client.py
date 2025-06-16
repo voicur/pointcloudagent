@@ -31,9 +31,11 @@ Available tools:
 If the user request requires file information, call a tool. Otherwise, just
 answer as a normal chat assistant."""
 
-def ask_llm(message: str) -> str:
+def ask_llm(prompt: str) -> str:
+    """Return the model reply for *prompt*."""
+
     resp = llm.create_completion(
-        prompt=f"{SYSTEM_PROMPT}\n\nUser: {message}\nAssistant:",
+        prompt=prompt,
         temperature=0.0,
         max_tokens=256,
         stop=["\nUser:"]
@@ -85,17 +87,28 @@ def call_tool(request_json: dict) -> dict:
 if __name__ == "__main__":
     print("Ask me about your point cloud or files (Ctrl-C to quit)")
     try:
+        history = SYSTEM_PROMPT
         while True:
             user_msg = input(">> ").strip()
-            raw = ask_llm(user_msg)
+
+            # send user message to the model
+            history += f"\n\nUser: {user_msg}\nAssistant:"
+            raw = ask_llm(history)
             print("Raw LLM reply:", repr(raw))
 
+            history += raw
             tool_req = extract_json(raw)
             if tool_req:
                 result = call_tool(tool_req)
                 print(f"[Tool result] {result}")
+
+                # provide the tool result back to the model
+                history += f"\n{json.dumps(result)}\nAssistant:"
+                final = ask_llm(history)
+                print(final)
+                history += final
             else:
-                print(raw)                    
+                print(raw)
     except KeyboardInterrupt:
         pass
     finally:
