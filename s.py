@@ -132,5 +132,5 @@ def compute_fpfh(path: str = DEFAULT_PLY,
     return pct.compute_fpfh(path, voxel_size, radius_normal, radius_feature)
 
 if __name__ == "__main__":
-    mcp.run(transport="streamable-http", stateless_http=True)
+    mcp.run(transport="streamable-http")
 
