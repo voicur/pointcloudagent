@@ -19,6 +19,11 @@ DEFAULT_PLY = "data/bunny.ply"
 def count_points(path: str = DEFAULT_PLY) -> int:
     return pct.count_points(path)
 
+
+@mcp.tool()
+def scan_room() -> dict:
+    return pct.scan_room()
+
 @mcp.tool()
 def get_bounding_box(path: str = DEFAULT_PLY) -> dict:
     return pct.get_bounding_box(path)
@@ -74,11 +79,8 @@ def show_mesh_with_texture(mesh_path: str, texture_path: str) -> dict:
     return pct.show_mesh_with_texture(mesh_path, texture_path)
 
 @mcp.tool()
-def animate_view(path: str = DEFAULT_PLY,
-                 axis: str = "y",
-                 n_frames: int = 120,
-                 output_folder: str = "frames") -> dict:
-    return pct.animate_view(path, axis, n_frames, output_folder)
+def animate_view(path: str = DEFAULT_PLY, axis: str = "x", duration_sec: float = 10.0) -> dict:
+    return pct.animate_view(path, axis, duration_sec)
 
 @mcp.tool()
 def show_hybrid(path_pc: str = DEFAULT_PLY, path_mesh: str = DEFAULT_PLY) -> dict:

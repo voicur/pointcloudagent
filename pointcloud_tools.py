@@ -32,6 +32,16 @@ def _ensure_exists(path: str) -> str:
 
 # ─── Core tools ───────────────────────────────────────────────────────────────────
 
+def scan_room() -> dict:
+    """
+    Placeholder for a “scan the room” tool.
+    TODO: replace this stub with your real room-scanning logic.
+    """
+    return {
+        "status": "scan_room executed",
+        "message": "I can’t scan the room just yet, but I’ll be able to soon!"
+    }
+
 def count_points(path: str) -> int:
     path = _ensure_exists(path)
     pc = o3d.io.read_point_cloud(path)
@@ -160,27 +170,40 @@ def show_mesh_with_texture(mesh_path: str, texture_path: str) -> dict:
     o3d.visualization.draw_geometries([mesh])
     return {"status": "textured mesh displayed"}
 
-#Not functional yet working on this:
-def animate_view(path: str, axis: str = "y", n_frames: int = 120, output_folder: str = "frames") -> dict:
+import time
+import open3d as o3d
+import os
+
+
+def animate_view(path: str, axis: str = "x", duration_sec: float = 10.0) -> dict:
+    """
+    Open a window, rotate the point cloud or mesh automatically for duration_sec seconds.
+    """
     path = _ensure_exists(path)
-    os.makedirs(output_folder, exist_ok=True)
-    geom = (o3d.io.read_triangle_mesh(path) if path.lower().endswith((".ply", ".obj"))
-            else o3d.io.read_point_cloud(path).sample_points_uniformly(100000))
-    geom.compute_vertex_normals()
+    if path.lower().endswith((".ply", ".obj")):
+        geom = o3d.io.read_triangle_mesh(path) if path.lower().endswith((".obj",)) \
+               else o3d.io.read_point_cloud(path)
+    else:
+        geom = o3d.io.read_point_cloud(path)
+
     vis = o3d.visualization.Visualizer()
-    vis.create_window(visible=False)
+    vis.create_window()
     vis.add_geometry(geom)
     ctr = vis.get_view_control()
-    for i in range(n_frames):
-        if axis == "y":
-            ctr.rotate(3, 0)
+
+    start = time.time()
+    while time.time() - start < duration_sec:
+        if axis.lower() == "x":
+            ctr.rotate(1.0, 0.0)
         else:
-            ctr.rotate(0, 3)
+            ctr.rotate(0.0, 1.0)
         vis.poll_events()
         vis.update_renderer()
-        vis.capture_screen_image(f"{output_folder}/frame_{i:03d}.png")
+        time.sleep(0.01)
+
     vis.destroy_window()
-    return {"status": "animation frames saved", "frames": n_frames}
+    return {"status": f"rotated {os.path.basename(path)} for {duration_sec} seconds"}
+
 
 #Not functional yet working on this:
 def show_hybrid(path_pc: str, path_mesh: str) -> dict:
